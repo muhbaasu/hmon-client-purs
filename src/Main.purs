@@ -15,8 +15,7 @@ import qualified Control.Monad.Eff.JQuery as J
 import Data.Either (Either (Left, Right))
 import DOM
 import Graphics.Canvas
-
---import Debug.Trace (trace)
+import Optic.Core
 
 main :: forall eff. Eff (ws :: WS, console :: C.CONSOLE, dom :: DOM, canvas::Canvas, err :: EXCEPTION | eff) Unit
 main = do
@@ -27,6 +26,7 @@ main = do
          Right _ -> output "DONE"
          Left err -> output err
 
+config :: WebSocketConfig
 config =
   { uri: "ws://127.0.0.1:9001"
   , protocols: []
@@ -77,18 +77,33 @@ initBar
   -> Chart
   -> Eff ( dom :: DOM , err :: EXCEPTION, canvas:: Canvas | eff ) ChartType
 initBar (Cpu {cpuData = cpuData}) c =
-  barChart c barData (responsiveChartConfig defBarChartConfig)
+  barChart c barData (responsiveChartConfig hmonBarChartCfg)
   where
     barData = {
       labels : ["user","nice","system","idle","iowait","irq","softirq"],
       datasets : [
-        { fillColor : "rgba(220,220,220,0.5)"
+        { fillColor : "rgba(2,136,209,0.75)"
         , strokeColor : "rgba(220,220,220,0.8)"
-        , highlightFill: "rgba(220,220,220,0.75)"
+        , highlightFill: "rgba(255,82,82,0.75)"
         , highlightStroke: "rgba(220,220,220,1)"
         , data : cpuData
         }
         ]}
+
+hmonChartCfg :: ChartConfig
+hmonChartCfg = set animation false defGlobalChartConfig
+
+hmonBarChartCfg :: BarChartConfig
+hmonBarChartCfg = set global hmonChartCfg $ set legendTemplate "" defBarChartConfig -- Pretty way for this ?
+
+animation :: forall a b r. Lens { animation :: a | r } { animation :: b | r } a b
+animation = lens _.animation (_ { animation = _ })
+
+global :: forall a b r. Lens { global :: a | r } { global :: b | r } a b
+global = lens _.global (_ { global = _ })
+
+legendTemplate :: forall a b r. Lens { legendTemplate :: a | r } { legendTemplate :: b | r } a b
+legendTemplate = lens _.legendTemplate (_ { legendTemplate = _ })
 
 die :: forall eff a. String -> Eff( err:: EXCEPTION | eff ) a
 die = error >>> throwException

@@ -22,6 +22,7 @@
     "purescript-dom": "~0.2.10",
     "purescript-canvas": "~0.3.4",
     "purescript-jquery": "~0.6.0",
-    "purescript-json": "~0.5.0"
+    "purescript-json": "~0.5.0",
+    "purescript-lens": "~0.9.1"
   }
 }

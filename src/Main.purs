@@ -94,7 +94,7 @@ hmonChartCfg :: ChartConfig
 hmonChartCfg = set animation false defGlobalChartConfig
 
 hmonBarChartCfg :: BarChartConfig
-hmonBarChartCfg = set global hmonChartCfg $ set legendTemplate "" defBarChartConfig -- Pretty way for this ?
+hmonBarChartCfg = responsiveChartConfig $ set global hmonChartCfg $ set legendTemplate "" defBarChartConfig -- Pretty way for this ?
 
 animation :: forall a b r. Lens { animation :: a | r } { animation :: b | r } a b
 animation = lens _.animation (_ { animation = _ })

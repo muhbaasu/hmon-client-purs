@@ -3,12 +3,14 @@ module Main where
 import Prelude
 import Data.Maybe
 import Data.Traversable
+import Data.JSON
 import ChartJs
 import WebSocket
 import qualified Control.Monad.Eff.Console as C
 import Control.Monad.Eff (Eff ())
 import Control.Monad.Eff.Exception
 import Control.Monad.Trans (lift)
+import Control.Monad.Maybe.Trans
 import qualified Control.Monad.Eff.JQuery as J
 import Data.Either (Either (Left, Right))
 import DOM
@@ -25,25 +27,28 @@ main = do
          Right _ -> output "DONE"
          Left err -> output err
 
-  void <<< J.ready $ do
-    initGraph "bar" initBar
-
 config =
   { uri: "ws://127.0.0.1:9001"
   , protocols: []
   }
 
-handlers :: forall eff. WebSocketHandler (console :: C.CONSOLE | eff)
+handlers :: forall eff. WebSocketHandler (console :: C.CONSOLE, dom :: DOM , err :: EXCEPTION, canvas :: Canvas | eff)
 handlers s = (defaultHandlers s)
   { onOpen = onOpenHandler
   , onMessage = onMessageHandler
   }
 
-onOpenHandler :: forall eff. WithWebSocket (console :: C.CONSOLE | eff) Unit
+onOpenHandler :: forall eff. WithWebSocket (console :: C.CONSOLE, dom :: DOM , err :: EXCEPTION, canvas :: Canvas | eff) Unit
 onOpenHandler = C.log "OPEN"
 
-onMessageHandler :: forall eff. String -> WithWebSocket (console :: C.CONSOLE | eff) Unit
-onMessageHandler msg = C.log msg
+onMessageHandler :: forall eff. String -> WithWebSocket (console :: C.CONSOLE, dom :: DOM , err :: EXCEPTION, canvas :: Canvas | eff) Unit
+onMessageHandler msg = do
+  case (decode msg :: Maybe Cpu) of
+    Just c -> do
+      initGraph "bar" $ initBar c
+      C.log $ "Successfully parsed" ++ show c
+    Nothing -> C.log "Failed to parse message"
+  return unit
 
 output :: forall eff. String -> WebSocket (console :: C.CONSOLE | eff) Unit
 output = lift <<< C.log
@@ -68,9 +73,10 @@ initGraph name f = void $ do
 
 initBar
   :: forall eff
-   . Chart
+   . Cpu
+  -> Chart
   -> Eff ( dom :: DOM , err :: EXCEPTION, canvas:: Canvas | eff ) ChartType
-initBar c =
+initBar (Cpu {cpuData = cpuData}) c =
   barChart c barData (responsiveChartConfig defBarChartConfig)
   where
     barData = {
@@ -80,15 +86,21 @@ initBar c =
         , strokeColor : "rgba(220,220,220,0.8)"
         , highlightFill: "rgba(220,220,220,0.75)"
         , highlightStroke: "rgba(220,220,220,1)"
-        , data : [70.0, 92.0, 89.0, 79.0, 34.0, 64.0, 1.0]
-        },
-        { fillColor : "rgba(151,187,205,0.5)"
-        , strokeColor : "rgba(151,187,205,0.8)"
-        , highlightFill : "rgba(151,187,205,0.75)"
-        , highlightStroke : "rgba(151,187,205,1)"
-        , data : [24.0, 8.0, 62.0, 48.0, 84.0, 45.0, 4.0]
+        , data : cpuData
         }
         ]}
 
 die :: forall eff a. String -> Eff( err:: EXCEPTION | eff ) a
 die = error >>> throwException
+
+data Cpu = Cpu {
+              cpuData :: Array Number
+           }
+
+instance showCpu :: Show Cpu where
+  show (Cpu cData) = "CPU: "
+
+instance cpuFromJSON :: FromJSON Cpu where
+  parseJSON (JObject o) = do
+    d <- o .: "cpu"
+    return $ Cpu {cpuData: d}

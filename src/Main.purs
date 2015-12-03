@@ -79,7 +79,7 @@ initBar
   -> Chart
   -> Eff ( dom :: DOM , err :: EXCEPTION, canvas:: Canvas | eff ) ChartType
 initBar (Cpu {cpuData = cpuData}) c =
-  barChart c barData (responsiveChartConfig hmonBarChartCfg)
+  barChart c barData (responsiveChartConfig cpuBarChartCfg)
   where
     barData = {
       labels : ["user","nice","system","idle","iowait","irq","softirq", "steal"],
@@ -97,6 +97,9 @@ hmonChartCfg = maintainAspectRatio .~ true $ animation .~ false $ defGlobalChart
 
 hmonBarChartCfg :: BarChartConfig
 hmonBarChartCfg = global .~ hmonChartCfg $ legendTemplate .~ "" $ defBarChartConfig
+
+cpuBarChartCfg :: BarChartConfig
+cpuBarChartCfg = fixScale 10.0 hmonBarChartCfg
 
 animation :: forall a b r. Lens { animation :: a | r } { animation :: b | r } a b
 animation = lens _.animation (_ { animation = _ })
@@ -118,6 +121,17 @@ width = lens _.width (_ { width = _ })
 
 height :: forall a b r. Lens { height :: a | r } { height :: b | r } a b
 height = lens _.height (_ { height = _ })
+
+fixScale :: forall r
+  . Number
+  -> { global :: ChartConfig | r }
+  -> { global :: ChartConfig | r }
+fixScale steps a =  a { global = a.global {
+  scaleOverride = true,
+  scaleSteps= steps,
+  scaleStepWidth= 10.0,
+  scaleStartValue= 0.0
+  } }
 
 die :: forall eff a. String -> Eff( err:: EXCEPTION | eff ) a
 die = error >>> throwException

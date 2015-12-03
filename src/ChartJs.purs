@@ -53,9 +53,9 @@ type ChartConfig =
   , animationEasing        :: String
   , showScale              :: Boolean
   , scaleOverride          :: Boolean
-  , scaleSteps             :: Maybe Number
-  , scaleStepWidth         :: Maybe Number
-  , scaleStartValue        :: Maybe Number
+  , scaleSteps             :: Number
+  , scaleStepWidth         :: Number
+  , scaleStartValue        :: Number
   , scaleLineColor         :: String
   , scaleLineWidth         :: Number
   , scaleShowLabels        :: Boolean
@@ -249,9 +249,9 @@ defGlobalChartConfig =
   , animationEasing: "easeOutQuart"
   , showScale: true
   , scaleOverride: false
-  , scaleSteps: Nothing
-  , scaleStepWidth: Nothing
-  , scaleStartValue: Nothing
+  , scaleSteps: 0.0
+  , scaleStepWidth: 0.0
+  , scaleStartValue: 0.0
   , scaleLineColor: "rgba(0,0,0,.1)"
   , scaleLineWidth: 1.0
   , scaleShowLabels: true

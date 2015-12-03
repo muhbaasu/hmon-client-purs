@@ -91,10 +91,10 @@ initBar (Cpu {cpuData = cpuData}) c =
         ]}
 
 hmonChartCfg :: ChartConfig
-hmonChartCfg = set animation false defGlobalChartConfig
+hmonChartCfg = animation .~ false $ defGlobalChartConfig
 
 hmonBarChartCfg :: BarChartConfig
-hmonBarChartCfg = responsiveChartConfig $ set global hmonChartCfg $ set legendTemplate "" defBarChartConfig -- Pretty way for this ?
+hmonBarChartCfg = responsiveChartConfig $ global .~ hmonChartCfg $ legendTemplate .~ "" $ defBarChartConfig
 
 animation :: forall a b r. Lens { animation :: a | r } { animation :: b | r } a b
 animation = lens _.animation (_ { animation = _ })
